@@ -1,38 +1,10 @@
 import React, { Component } from 'react';
 import { Link } from 'react-router-dom';
-import * as BooksAPI from './BooksAPI';
 
 class ListBook extends Component {
-  state = {
-    books: []
-  };
-
-  componentDidMount() {
-    BooksAPI.getAll().then(books => {
-      if (books[0]) {
-        this.setState({ books });
-      }
-    });
-  }
-
-  updateBookCategory(event, book) {
-    const shelf = event.target.value;
-    if (shelf !== book.shelf) {
-      const books = this.state.books.map(currentBook => {
-        if (book.id === currentBook.id) {
-          currentBook.shelf = shelf;
-        }
-        return currentBook;
-      });
-
-      this.setState({ books });
-      BooksAPI.update(book, shelf);
-    }
-  }
-
   render() {
-    const { books } = this.state;
-
+    const { books, onUpdateBookCategory } = this.props;
+    
     return (
       <div className="list-books">
         <div className="list-books-title">
@@ -67,10 +39,12 @@ class ListBook extends Component {
                                 <select
                                   value={book.shelf}
                                   onChange={value =>
-                                    this.updateBookCategory(value, book)
+                                    onUpdateBookCategory(value, book)
                                   }
                                 >
-                                  <option value="move" disabled>Move to...</option>
+                                  <option value="move" disabled>
+                                    Move to...
+                                  </option>
                                   <option value="currentlyReading">
                                     Currently Reading
                                   </option>
@@ -117,10 +91,12 @@ class ListBook extends Component {
                                 <select
                                   value={book.shelf}
                                   onChange={value =>
-                                    this.updateBookCategory(value, book)
+                                    onUpdateBookCategory(value, book)
                                   }
                                 >
-                                  <option value="move" disabled>Move to...</option>
+                                  <option value="move" disabled>
+                                    Move to...
+                                  </option>
                                   <option value="currentlyReading">
                                     Currently Reading
                                   </option>
@@ -166,10 +142,12 @@ class ListBook extends Component {
                                 <select
                                   value={book.shelf}
                                   onChange={value =>
-                                    this.updateBookCategory(value, book)
+                                    onUpdateBookCategory(value, book)
                                   }
                                 >
-                                  <option value="move" disabled>Move to...</option>
+                                  <option value="move" disabled>
+                                    Move to...
+                                  </option>
                                   <option value="currentlyReading">
                                     Currently Reading
                                   </option>
@@ -194,9 +172,7 @@ class ListBook extends Component {
         </div>
         <div className="open-search">
           <Link to="/search">
-            <button onClick={() => this.setState({ showSearchPage: true })}>
-              Add a book
-            </button>
+            <button>Add a book</button>
           </Link>
         </div>
       </div>

@@ -5,35 +5,44 @@ import * as BooksAPI from './BooksAPI';
 class Search extends Component {
   state = {
     query: '',
-    books: []
+    booksSearch: []
   };
-
-  /** /componentDidMount() {
-    BooksAPI.getAll().then(books => {
-      console.log(books);
-      this.setState({ books });
-    });
-  }*/
 
   searchBooks = query => {
     this.setState({ query });
 
     BooksAPI.search(query)
-      .then(books => {
-        if (books[0] && query === this.state.query) {
-          this.setState({ books });
+      .then(booksSearch => {
+        if (booksSearch[0] && query === this.state.query) {
+          this.setCorrespondentShelf(booksSearch);
+          this.setState({ booksSearch });
         } else {
-          this.setState({ books: [] });
+          this.setState({ booksSearch: [] });
         }
       })
       .catch(error => {
-        this.setState({ books: [] });
+        this.setState({ booksSearch: [] });
       });
   };
 
+  setCorrespondentShelf(booksSearch) {
+    let booksSearchShelf = [];
+    const { books } = this.props;
+
+    for (const bookSearch of booksSearch) {
+      for (const book of books) {
+        if (book.id === bookSearch.id) {
+          bookSearch.shelf = book.shelf;
+        }
+      }
+      booksSearchShelf.push(bookSearch);
+    }
+    this.setState({ booksSearch: booksSearchShelf });
+  }
+
   render() {
-    const { books } = this.state;
-    const { query } = this.state;
+    const { booksSearch, query } = this.state;
+    const { onUpdateBookCategory } = this.props;
 
     return (
       <div className="search-books">
@@ -59,7 +68,7 @@ class Search extends Component {
         </div>
         <div className="search-books-results">
           <ol className="books-grid">
-            {books.map(book => (
+            {booksSearch.map(book => (
               <li key={book.id}>
                 <div className="book">
                   <div className="book-top">
@@ -75,7 +84,10 @@ class Search extends Component {
                       />
                     )}
                     <div className="book-shelf-changer">
-                      <select>
+                      <select
+                        value={book.shelf ? book.shelf : 'none'}
+                        onChange={value => onUpdateBookCategory(value, book)}
+                      >
                         <option value="move" disabled>
                           Move to...
                         </option>
@@ -95,7 +107,9 @@ class Search extends Component {
             ))}
           </ol>
         </div>
-        {books.length === 0 && query !== '' && <div>No results found</div>}
+        {booksSearch.length === 0 && query !== '' && (
+          <div>No results found</div>
+        )}
       </div>
     );
   }
