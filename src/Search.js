@@ -5,25 +5,35 @@ import * as BooksAPI from './BooksAPI';
 class Search extends Component {
   state = {
     query: '',
-    booksSearch: []
+    booksSearch: [],
+    searching: false
   };
 
-  searchBooks = query => {
+  searchBooks = debounce(query => {
     this.setState({ query });
+    this.setState({ searching: true });
+    this.setState({ booksSearch: [] });
 
-    BooksAPI.search(query)
-      .then(booksSearch => {
-        if (booksSearch[0] && query === this.state.query) {
-          this.setCorrespondentShelf(booksSearch);
-          this.setState({ booksSearch });
-        } else {
+    if (query) {
+      BooksAPI.search(query)
+        .then(booksSearch => {
+          this.setState({ searching: false });
+          if (booksSearch[0] && query === this.state.query) {
+            this.setCorrespondentShelf(booksSearch);
+            this.setState({ booksSearch });
+          } else {
+            this.setState({ booksSearch: [] });
+          }
+        })
+        .catch(error => {
+          this.setState({ searching: false });
           this.setState({ booksSearch: [] });
-        }
-      })
-      .catch(error => {
-        this.setState({ booksSearch: [] });
-      });
-  };
+        });
+    } else {
+      this.setState({ searching: false });
+      this.setState({ booksSearch: [] });
+    }
+  }, 400);
 
   setCorrespondentShelf(booksSearch) {
     let booksSearchShelf = [];
@@ -41,7 +51,7 @@ class Search extends Component {
   }
 
   render() {
-    const { booksSearch, query } = this.state;
+    const { booksSearch, query, searching } = this.state;
     const { onUpdateBookCategory } = this.props;
 
     return (
@@ -107,8 +117,15 @@ class Search extends Component {
             ))}
           </ol>
         </div>
-        {booksSearch.length === 0 && query !== '' && (
-          <div>No results found</div>
+        {booksSearch.length === 0 && query !== '' && searching && (
+          <div className="loader-container">
+            <div className="loader"></div>
+          </div>
+        )}
+        {booksSearch.length === 0 && query !== '' && !searching && (
+          <div className="loader-container">
+            <span className="no-results-found">No results found</span>
+          </div>
         )}
       </div>
     );
@@ -116,3 +133,17 @@ class Search extends Component {
 }
 
 export default Search;
+
+export const debounce = (func, wait) => {
+  let timeout;
+  return function() {
+    const context = this;
+    const args = arguments;
+    const later = function() {
+      timeout = null;
+      func.apply(context, args);
+    };
+    clearTimeout(timeout);
+    timeout = setTimeout(later, wait);
+  };
+};
